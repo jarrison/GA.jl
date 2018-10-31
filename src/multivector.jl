@@ -1,4 +1,3 @@
-module GA
 struct Blade{T,N}
     bladeint::T
     val::N
@@ -26,4 +25,13 @@ end
 @inline Base.:*(x::Blade,y::Blade) = Blade(x.bladeint ⊻ y.bladeint,1)
 @inline Base.:*(x::Number, y::Blade) = Blade(y.bladeint, y.val * x )
 
+################
+#    Display   #
+################
+
+function Base.repr(bx::Blade)
+    bs = bitstring(bx.bladeint)
+    indices = findall(x->isone(parse(Int,x)),reverse(bs))
+    str = "e" # Using this for basis vectors for now.
+    return "( "*string(bx.val)*" )⋅"*str*join(string.(indices.-1),"e")
 end
