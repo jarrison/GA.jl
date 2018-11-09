@@ -6,7 +6,7 @@ Geometric Algebra in Julia.
 ```julia
 a = toblade("e1e2")
 b = toblade("e2e3")
-c = a * b
+c = a * b # This is the Geometric Product.
 ```
 ### References
   Geometric Algebra for Physicists. Chris Doran and Anthony Lasenby .Cambridge University Press; 1 edition (December 10, 2007)
