@@ -1,26 +1,8 @@
-
-struct Blade{T,N}
-    bladeint::T
-    val::N
+struct Blade
+    bladeint::Integer
+    val::Number
 end
 
-function tovectors(xs::String)
-    r = eachmatch(r"([a-z][0-9])",xs)
-    vectors = [i.match for i in r]
-    return vectors
-end
-
-function getbladerep(xs::String)
-    vectors = tovectors(xs)
-    labels = [parse(Int,match(r"([0-9])",v).match) for v in vectors]
-    intrep = 2 .^ labels
-    return sum(&,intrep)
-end
-
-function toblade(xs::String,val=1)
-    bint = getbladerep(xs)
-    return Blade(bint, val)
-end
 
 function count_swaps(ma::Blade,mb::Blade)
     avec = reverse!([parse(UInt8,aa) for aa in bitstring(ma.bladeint)])[2:end]
@@ -34,10 +16,76 @@ function count_swaps(ma::Blade,mb::Blade)
         return -1
     end
 end
+################
+#     Math     #
+################
 # Blade product is binary XOR of the int representation.
-@inline Base.:*(x::Blade,y::Blade) = Blade(x.bladeint ⊻ y.bladeint, x.val * y.val * count_swaps(x,y))
+@inline Base.:*(x::Blade,y::Blade) = Blade(x.bladeint ⊻ y.bladeint, (x.val * y.val )* count_swaps(x,y))
 @inline Base.:*(x::Number, y::Blade) = Blade(y.bladeint, y.val * x )
 @inline Base.:*(x::Blade, y::Number) = Blade(x.bladeint, x.val * y )
+
+################
+#  Multivector #
+################
+function Base.:+(b1::Blade,b2::Blade)
+    sum = b1.val+b2.val
+    if b1.bladeint == b2.bladeint
+        return Blade(b1.bladeint, sum)
+    else
+        return Blade[b1,b2]
+    end
+end
+
+################
+#  Multivector #
+################
+
+const Multivector = Vector{Blade}
+
+function Base.:+(mA::Multivector, mB::Multivector)
+    return sort([mA;mB],by=x->x.bladeint)
+end
+
+function Base.:-(mA::Multivector, mB::Multivector)
+    return sort([mA;-1*mB], by=x->x.bladeint)
+end
+
+###################
+# Representations #
+###################
+""" Parse an expression as a string of basis vectors, create blades of those
+vectors"""
+macro basis(arg)
+    arg = String(arg)
+    bvecs = tovectors(arg)
+    ex = Expr(:block)
+    for i in bvecs
+        varname = Symbol(i)
+        ex_aux = quote
+            $varname = toblade($i)
+        end
+        append!(ex.args,ex_aux.args)
+    end
+    return esc(ex)
+end
+
+function tovectors(xs::AbstractString)
+    r = eachmatch(r"([a-z][0-9])",xs)
+    vectors = [i.match for i in r]
+    return vectors
+end
+
+function getbladerep(xs::AbstractString)
+    vectors = tovectors(xs)
+    labels = [parse(Int,match(r"([0-9])",v).match) for v in vectors]
+    intrep = 2 .^ labels
+    return sum(&,intrep)
+end
+
+function toblade(xs::AbstractString,val=1)
+    bint = getbladerep(xs)
+    return Blade(bint, val)
+end
 
 ################
 #    Display   #
@@ -46,5 +94,13 @@ function Base.repr(bx::Blade)
     bs = bitstring(bx.bladeint)
     indices = findall(x->isone(parse(Int,x)),reverse(bs))
     str = "e" # Using this for basis vectors for now.
-    return "( "*string(bx.val)*" ) ⋅ "*str*join(string.(indices.-1),"e")
+    if bx.bladeint == 0
+        return "( "*string(bx.val)*" )"
+    else
+        return "( "*string(bx.val)*" ) ⋅ "*str*join(string.(indices.-1),"e")
+    end
+end
+
+function Base.show(io::IO, bx::Blade)
+    print(io,repr(bx))
 end

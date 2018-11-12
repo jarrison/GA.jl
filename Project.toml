@@ -1,0 +1,6 @@
+authors = ["jarrison <jarrison@uw.edu>"]
+name = "GA"
+uuid = "91fa80b0-e450-11e8-31cd-5b6211d366bc"
+version = "0.1.0"
+
+[deps]
