@@ -1,16 +1,17 @@
-struct Blade
-    bladeint::Integer
-    val::Number
+struct Blade{T<:Integer,N<:Number}
+    bladeint::T
+    val::N
+    grade::Integer
 end
+@inline Blade(x::T,y::N) where {T<:Integer,N<:Number} = Blade(x::T, y::N, count_ones(x))
 
-
-function count_swaps(ma::Blade,mb::Blade)
-    avec = reverse!([parse(UInt8,aa) for aa in bitstring(ma.bladeint)])[2:end]
-    bvec = reverse!([parse(UInt8,bb) for bb in bitstring(mb.bladeint)])[2:end]
-    bvec = cumsum(bvec)[1:end-1]
-    avec = avec[2:end]
-    sm = convert(Int,sum(bvec .* avec))
-    if iseven(sm)
+@inline function count_swaps(ma::Blade, mb::Blade)
+    pad = (64-min(leading_zeros(ma.bladeint), leading_zeros(mb.bladeint)))
+    aa = digits(ma.bladeint>>1,base=2,pad=pad)
+    bb = digits(mb.bladeint,base=2,pad=pad)
+    cumsum!(bb,bb)
+    cc = sum(aa .* bb)
+    if iseven(cc)
         return 1
     else
         return -1
@@ -27,8 +28,8 @@ end
 ################
 #  Multivector #
 ################
-function Base.:+(b1::Blade,b2::Blade)
-    sum = b1.val+b2.val
+@inline function Base.:+(b1::Blade,b2::Blade)
+    sum = b1.val::Number + b2.val::Number
     if b1.bladeint == b2.bladeint
         return Blade(b1.bladeint, sum)
     else
@@ -43,6 +44,9 @@ end
 const Multivector = Vector{Blade}
 
 function Base.:+(mA::Multivector, mB::Multivector)
+    return sort([mA;mB],by=x->x.bladeint)
+end
+function Base.:+(mA::Multivector, mB::Blade)
     return sort([mA;mB],by=x->x.bladeint)
 end
 
