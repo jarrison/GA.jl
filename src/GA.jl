@@ -1,4 +1,4 @@
 module GA
-export Blade, Multivector, @basis, toblade
+export Blade, Multivector, @basis
 include("multivector.jl")
 end

@@ -3,7 +3,8 @@ struct Blade{T<:Integer,N<:Number}
     val::N
     grade::Integer
 end
-@inline Blade(x::T,y::N) where {T<:Integer,N<:Number} = Blade(x::T, y::N, count_ones(x))
+Blade(x::T,y::N) where {T<:Integer,N<:Number} = Blade(x::T, y::N, count_ones(x))
+Blade(x::T) where {T<:Integer} = Blade(x::T, 1, count_ones(x))
 
 @inline function count_swaps(ma::Blade, mb::Blade)
     pad = (64-min(leading_zeros(ma.bladeint), leading_zeros(mb.bladeint)))
@@ -24,7 +25,7 @@ end
 @inline Base.:*(x::Blade,y::Blade) = Blade(x.bladeint ⊻ y.bladeint, (x.val * y.val )* count_swaps(x,y))
 @inline Base.:*(x::Number, y::Blade) = Blade(y.bladeint, y.val * x )
 @inline Base.:*(x::Blade, y::Number) = Blade(x.bladeint, x.val * y )
-
+issame(x::Blade,y::Blade) = x.bladeint == y.bladeint
 ################
 #  Multivector #
 ################
@@ -46,7 +47,11 @@ const Multivector = Vector{Blade}
 function Base.:+(mA::Multivector, mB::Multivector)
     return sort([mA;mB],by=x->x.bladeint)
 end
+
 function Base.:+(mA::Multivector, mB::Blade)
+    return sort([mA;mB],by=x->x.bladeint)
+end
+function Base.:+(mB::Blade,mA::Multivector)
     return sort([mA;mB],by=x->x.bladeint)
 end
 
@@ -59,36 +64,19 @@ end
 ###################
 """ Parse an expression as a string of basis vectors, create blades of those
 vectors"""
-macro basis(arg)
-    arg = String(arg)
-    bvecs = tovectors(arg)
+macro basis(x...)
     ex = Expr(:block)
-    for i in bvecs
-        varname = Symbol(i)
+    if length(x)==1 && isa(x[1],Expr)
+        @assert x[1].head === :tuple "expected list of vectors."
+        x = x[1].args
+    end
+    for (i,s) in enumerate(x)
         ex_aux = quote
-            $varname = toblade($i)
+            $s = Blade(2^($i-1))
         end
         append!(ex.args,ex_aux.args)
     end
     return esc(ex)
-end
-
-function tovectors(xs::AbstractString)
-    r = eachmatch(r"([a-z][0-9])",xs)
-    vectors = [i.match for i in r]
-    return vectors
-end
-
-function getbladerep(xs::AbstractString)
-    vectors = tovectors(xs)
-    labels = [parse(Int,match(r"([0-9])",v).match) for v in vectors]
-    intrep = 2 .^ labels
-    return sum(&,intrep)
-end
-
-function toblade(xs::AbstractString,val=1)
-    bint = getbladerep(xs)
-    return Blade(bint, val)
 end
 
 ################
