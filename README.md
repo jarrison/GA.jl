@@ -19,5 +19,5 @@ b = e2*e3
 c = a*b
 ```
 ### References
-  Geometric Algebra for Physicists. Chris Doran and Anthony Lasenby .Cambridge University Press; 1 edition (December 10, 2007)
+  Geometric Algebra for Physicists. Chris Doran and Anthony Lasenby .Cambridge University Press; 1 edition (December 10, 2007)  
   http://geometry.mrao.cam.ac.uk/2017/10/geometric-algebra-in-haskell/
