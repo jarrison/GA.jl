@@ -1,15 +1,19 @@
-include("blade.jl")
-include("multivector.jl")
+include("../src/multivector.jl")
 @basis e1 e2 e3
+# Vectors
+a = e1
+b = e2
+c = e3
 
-a = e1*e2
-b = e1*e3
+# Bivectors
+A = e1*e2
+B = e2*e3
+C = e3*e1
 
-a*b
-b*a
+# Pseudoscalar
+I = e1*e2*e3
 
-a + b
-
-1.0 + b
-
-b *(1/99999)
+# Duals
+i = -1*I*A
+j = -1*I*B
+k = -1*I*C
